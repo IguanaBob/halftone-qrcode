@@ -1,9 +1,28 @@
+# Firebase CLI cache and logs
+.firebase/
+firebase-debug.log*
+firebase-debug.*.log*
+ui-debug.log*
+
+# Dependencies (in case npm tooling is added later)
+node_modules/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Claude Code personal settings
+.claude/settings.local.json
+
+# macOS
 .DS_Store
 .AppleDouble
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
 
 # Thumbnails
 ._*
@@ -18,3 +37,13 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Linux
+.directory
+.Trash-*
+.fuse_hidden*
+.nfs*
+
+# Windows
+Thumbs.db
+Desktop.ini
