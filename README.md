@@ -92,4 +92,4 @@ Further reading: [如何优雅地让人给你打钱](https://zhuanlan.zhihu.com/
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Lachlan Arthur's [original version](https://jsfiddle.net/lachlan/r8qWV/) was also released under the MIT license, so his copyright notice is included alongside Jason Butler's and Jonathan Hull's.
