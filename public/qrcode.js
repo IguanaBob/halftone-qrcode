@@ -426,6 +426,11 @@ var qrcode2 = function() {
       _this.getModuleCount = function() {
         return _moduleCount;
       };
+
+      // Added for the scan check: the Reed-Solomon block layout in use.
+      _this.getRSBlocks = function() {
+        return QRRSBlock.getRSBlocks(_typeNumber, _errorCorrectionLevel);
+      };
   
       _this.make = function(onlyControl) {
         if (_typeNumber < 1) {

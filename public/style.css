@@ -56,6 +56,11 @@ h2 {
     margin-bottom: 2px;
 }
 
+.field input[type="range"] {
+    width: min(100%, 18em);
+    vertical-align: middle;
+}
+
 .effect {
     display: flex;
     flex-wrap: wrap;
@@ -74,7 +79,8 @@ textarea {
 }
 
 input[type="number"] {
-    width: 5em;
+    width: 4.5em;
+    margin-left: 6px;
 }
 
 #crop {
@@ -122,6 +128,27 @@ canvas {
 #error {
     color: #b00020;
     font-weight: bold;
+}
+
+.scan-check {
+    font-weight: bold;
+}
+
+.scan-ok {
+    color: #1b7a2e;
+}
+
+.scan-bad {
+    color: #b35c00;
+}
+
+.scan-about summary {
+    cursor: pointer;
+}
+
+.scan-about p {
+    margin: 6px 0;
+    max-width: 40em;
 }
 
 .hint {

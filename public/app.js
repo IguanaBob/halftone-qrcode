@@ -55,7 +55,7 @@ function readSettings() {
   return {
     text: byId("input").value,
     errorLevel: byId("error_level").value,
-    qrSize: wholeNumber("size", "QR size", 0, 40),
+    qrSize: wholeNumber("size", "QR size", 1, 40),
     pixelSize: pixelSize, // pixels per sub-cell
     subCells: subCells, // sub-cells per module side
     blockSize: subCells * pixelSize, // pixels per module side
@@ -95,6 +95,22 @@ qrcode2.stringToBytes = function (text) {
   return Array.from(new TextEncoder().encode(text));
 };
 
+// The smallest QR size (version) that holds the text at this error
+// correction level, or 0 if none does. Text is stored as UTF-8 bytes:
+// a 4-bit mode, then the byte count (8 bits up to version 9, 16 after).
+function smallestQRSize(text, errorLevel) {
+  var bytes = new TextEncoder().encode(text).length;
+  for (var version = 1; version <= 40; version++) {
+    var capacity = qrcode2(version, errorLevel)
+      .getRSBlocks()
+      .reduce(function (sum, b) {
+        return sum + b.dataCount * 8;
+      }, 0);
+    if (4 + (version < 10 ? 8 : 16) + bytes * 8 <= capacity) return version;
+  }
+  return 0;
+}
+
 function makeQR(settings, onlyControl) {
   var qr = qrcode2(settings.qrSize, settings.errorLevel);
   qr.addData(settings.text);
@@ -103,7 +119,7 @@ function makeQR(settings, onlyControl) {
   } catch (e) {
     if (String(e).indexOf("code length overflow") === 0) {
       throw new Error(
-        settings.qrSize
+        settings.qrSize < 40
           ? "The text is too long for QR size " + settings.qrSize +
             " at this redundancy level. Use a larger QR size, a lower " +
             "redundancy level, or 0 for automatic."
@@ -112,12 +128,18 @@ function makeQR(settings, onlyControl) {
     }
     throw e;
   }
-  return qr.returnByteArray();
+  return qr;
 }
 
 function halftoneQR(imageCanvas, settings) {
-  var QRBytes = rotateMatrix(makeQR(settings, false), settings.rotation);
-  var controlBytes = rotateMatrix(makeQR(settings, true), settings.rotation);
+  var qr = makeQR(settings, false);
+  var control = makeQR(settings, true).returnByteArray();
+  var blocks = qr.getRSBlocks();
+  var codewords = blocks.reduce(function (sum, b) {
+    return sum + b.totalCount;
+  }, 0);
+  var QRBytes = rotateMatrix(qr.returnByteArray(), settings.rotation);
+  var controlBytes = rotateMatrix(control, settings.rotation);
 
   var codeSize = QRBytes.length * settings.blockSize;
   var margin = settings.quietZone ? QUIET_ZONE_MODULES * settings.blockSize : 0;
@@ -163,6 +185,14 @@ function halftoneQR(imageCanvas, settings) {
   outputCtx.drawImage(codeCanvas, margin, margin);
 
   updateDownload(outputCanvas);
+
+  // Describe what was drawn, for the scan check.
+  return {
+    matrix: QRBytes,
+    map: rotateMatrix(codewordMap(control, codewords), settings.rotation),
+    blocks: blocks,
+    margin: settings.quietZone ? QUIET_ZONE_MODULES : 0,
+  };
 }
 
 function drawTransparent(canvas, QRBytes, controlBytes, settings) {
@@ -352,10 +382,34 @@ document.addEventListener("DOMContentLoaded", function () {
     var canvas = cropper.result();
     if (!canvas) return; // no image yet
     try {
-      halftoneQR(canvas, readSettings());
+      var code = halftoneQR(canvas, readSettings());
       showError("");
+      showScanCheck(scanCheck(byId("output"), code));
     } catch (e) {
       showError(e && e.message ? e.message : String(e));
+      showScanCheck(null);
+    }
+  }
+
+  function showScanCheck(result) {
+    var el = byId("scan-check");
+    el.className = "scan-check";
+    if (!result) {
+      el.textContent = "";
+      return;
+    }
+    var used = Math.round(Math.min(result.worst, 9.99) * 100);
+    if (result.ok) {
+      el.classList.add("scan-ok");
+      el.textContent =
+        "✓ Simulated scan passed, using up to " + used +
+        "% of the error correction.";
+    } else {
+      el.classList.add("scan-bad");
+      el.textContent =
+        "⚠ Simulated scan failed: " + result.failed + " of " +
+        result.blockCount + " error-correction blocks have more errors " +
+        "than they can fix. Try a bigger dot size or higher redundancy.";
     }
   }
 
@@ -397,9 +451,56 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
   // Show the dot size percentage beside its slider.
-  byId("dot-size").addEventListener("input", function () {
-    byId("dot-size-label").textContent = this.value + "%";
+  // Each slider has a number box beside it for typing or the up/down
+  // buttons. The slider holds the real value; the box mirrors it.
+  var sliders = ["size", "quality", "block-size", "dot-size"];
+  function showSliderValues() {
+    sliders.forEach(function (id) {
+      var box = byId(id + "-num");
+      // Don't rewrite a box mid-typing ("1" on the way to "12").
+      if (box !== document.activeElement) box.value = byId(id).value;
+    });
+  }
+  sliders.forEach(function (id) {
+    var slider = byId(id);
+    var box = byId(id + "-num");
+    slider.addEventListener("input", showSliderValues);
+    box.addEventListener("input", function () {
+      var n = Number(box.value);
+      if (box.value === "" || !Number.isInteger(n)) return; // still typing
+      if (n < Number(slider.min) || n > Number(slider.max)) return;
+      slider.value = n;
+      slider.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    // When the box is left or Enter is pressed, show the value in use.
+    box.addEventListener("change", function () {
+      box.value = slider.value;
+    });
   });
+
+  // An empty or whitespace-only text box goes back to the default text
+  // (on page load and on Reset), since there would be nothing to encode.
+  function restoreBlankText() {
+    var input = byId("input");
+    if (input.value.trim() === "") input.value = input.defaultValue;
+  }
+
+  // QR size follows the text: it grows when the text needs a bigger code
+  // and shrinks back as the text gets shorter, but never below the size
+  // the user chose. Dragging fully left means "smallest that fits".
+  var preferredSize = Number(byId("size").value);
+  function fitSize() {
+    var needed = smallestQRSize(byId("input").value, byId("error_level").value);
+    // Nothing fits: stay at 40, and rendering explains the problem.
+    byId("size").value = needed ? Math.max(preferredSize, needed) : 40;
+    showSliderValues();
+  }
+  byId("size").addEventListener("input", function () {
+    preferredSize = Number(this.value);
+    fitSize();
+  });
+  byId("input").addEventListener("input", fitSize);
+  byId("error_level").addEventListener("change", fitSize);
 
   // Rotation buttons turn the code 90 degrees at a time.
   function rotateBy(degrees) {
@@ -436,7 +537,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // A hidden input's default follows its value, so set rotation directly.
     byId("rotation").value = "0";
     byId("rotation-label").textContent = "0°";
-    byId("dot-size-label").textContent = byId("dot-size").value + "%";
+    restoreBlankText();
+    preferredSize = Number(byId("size").value);
+    fitSize();
     scheduleRerender();
   });
 
@@ -467,5 +570,8 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // First load: the sample image from sample-image.js.
+  // Browsers may restore an emptied text box on refresh.
+  restoreBlankText();
+  fitSize(); // in case the starting text needs a bigger code
   loadImage(SAMPLE_IMAGE_URL);
 });

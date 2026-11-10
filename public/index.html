@@ -8,6 +8,7 @@
     <script src="sample-image.js"></script>
     <script src="png-encoder.js"></script>
     <script src="cropper.js"></script>
+    <script src="scan-check.js"></script>
     <script src="app.js"></script>
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -36,7 +37,7 @@
 
         <div class="field">
           <label for="input">Text or URL to encode</label>
-          <textarea id="input" rows="4">shorturl.at/mCOP0</textarea>
+          <textarea id="input" rows="4">https://github.com/IguanaBob/halftone-qrcode</textarea>
         </div>
 
         <div class="field">
@@ -50,24 +51,27 @@
         </div>
 
         <div class="field">
-          <label for="size">QR size (1 to 40, or 0 for automatic)</label>
-          <input type="number" id="size" value="6" min="0" max="40" step="1" />
+          <label for="size">QR size (grows to fit the text; drag fully left for the smallest that fits)</label>
+          <input type="range" id="size" value="6" min="1" max="40" step="1" />
+          <input type="number" id="size-num" value="6" min="1" max="40" step="1" aria-label="QR size" />
         </div>
 
         <div class="field">
-          <label for="quality">Quality (1 to 20)</label>
-          <input type="number" id="quality" value="3" min="1" max="20" step="1" />
+          <label for="quality">Quality (pixels per sub-module)</label>
+          <input type="range" id="quality" value="3" min="1" max="20" step="1" />
+          <input type="number" id="quality-num" value="3" min="1" max="20" step="1" aria-label="Quality" />
         </div>
 
         <div class="field">
-          <label for="block-size">Block size (3 recommended for scanning)</label>
-          <input type="number" id="block-size" value="3" min="1" max="9" step="1" />
+          <label for="block-size">Block size (sub-modules per module; 3 recommended)</label>
+          <input type="range" id="block-size" value="3" min="1" max="9" step="1" />
+          <input type="number" id="block-size-num" value="3" min="1" max="9" step="1" aria-label="Block size" />
         </div>
 
         <div class="field">
           <label for="dot-size">Dot size (bigger scans more easily, smaller shows more image)</label>
           <input type="range" id="dot-size" min="10" max="100" step="1" value="33" />
-          <output id="dot-size-label" for="dot-size">33%</output>
+          <input type="number" id="dot-size-num" value="33" min="10" max="100" step="1" aria-label="Dot size percent" />%
         </div>
 
         <div class="field">
@@ -124,7 +128,24 @@
         <a id="download" href="about:blank" download="qr.png" title="Download QR Code">
           <canvas id="output"></canvas>
         </a>
+        <p id="scan-check" class="scan-check" aria-live="polite"></p>
         <p class="hint">Click the QR code to download it as a PNG<span id="png-info"></span>.</p>
+        <details class="hint scan-about">
+          <summary>About the simulated scan</summary>
+          <p>
+            The page imitates what a phone camera would see: it shrinks the
+            code to about 8 pixels per module, blurs it slightly, and converts
+            it to black and white the way scanner apps do. It then reads every
+            module, including with the reading grid slightly misaligned, and
+            checks whether error correction could fix the mistakes.
+          </p>
+          <p>
+            It can't simulate lighting, glare, shadows, viewing angle, camera
+            shake, distance, print or screen quality, or differences between
+            scanner apps. A code that passes is likely to work, but it's still
+            an estimate: always test with a real phone, ideally two.
+          </p>
+        </details>
       </div>
     </div>
 

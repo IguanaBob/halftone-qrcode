@@ -21,7 +21,7 @@ Drop in a picture, crop it, tune a few settings, and download the result as a PN
 | Option | What it does |
 | --- | --- |
 | Redundancy | QR error-correction level, from Low (7%) to High (30%). Higher levels leave more room for the image and still scan reliably. |
-| QR size | QR version, from 1 to 40, or 0 to pick the smallest size that fits the text. Larger versions hold more data and give more detail. |
+| QR size | QR version, from 1 to 40. Larger versions hold more data and give more detail. The slider grows automatically when the text needs a bigger code and shrinks back as the text gets shorter, but never below the size you chose. Drag it fully left to always use the smallest size that fits. |
 | Quality | Pixels per sub-module, from 1 to 20. Higher values give a bigger, more detailed output. |
 | Block size | Sub-modules per side of each QR module, from 1 to 9. **3 is recommended** for reliable scanning. |
 | Dot size | Size of the data dot in the center of each module, from 10% to 100% of the module. Bigger dots scan more reliably; smaller dots let more of the image show. The default, 33%, is one sub-module at block size 3. The corner and timing patterns are always solid. |
@@ -33,11 +33,11 @@ Drop in a picture, crop it, tune a few settings, and download the result as a PN
 | Dithering | Atkinson dithering on the sub-module grid, with an adjustable threshold. Turn off Black and white to see its effect. |
 | Black and white | Converts the image to pure black and white at an adjustable threshold. |
 
-**Reset options to defaults** puts every option above back to its starting value. Your text and image are kept.
+**Reset options to defaults** puts every option above back to its starting value. Your text and image are kept, except that an empty text box goes back to the default text (the project link). The same happens when the page is reloaded.
 
 Effects are applied in the order listed. If a setting can't work (for example, the text is too long for the chosen QR size), the page shows a message explaining what to change.
 
-Always test the result with a phone or two before using it. Aggressive settings can make a code unscannable.
+Under the preview, a **simulated scan** estimates whether a phone could read the code. It shrinks and slightly blurs the image as a camera would, converts it to black and white the way scanner apps do, reads every module, and checks whether error correction could fix the mistakes. It reports how much of the error correction was needed, or which blocks would fail. It can't model lighting, glare, angle, distance or print quality, so always test the result with a phone or two before using it. Aggressive settings can make a code unscannable.
 
 ## Project layout
 
@@ -48,6 +48,7 @@ public/                 The app
   app.js                Image processing and halftone rendering
   png-encoder.js        PNG export that picks the smallest correct format
   cropper.js            Crop box: drag, zoom, pinch and keyboard
+  scan-check.js         Simulated scan shown under the preview
   style.css             Page styles
   sample-image.js       Startup sample image, embedded as a data URL
   qrcode.js             QR encoder (Kazuhiko Arase, MIT, lightly modified)
@@ -64,7 +65,7 @@ The sample image is embedded in `sample-image.js` rather than loaded from `mona-
 - **Standard orientation and rotation.** Codes used to be drawn mirrored (rows and columns swapped), which most phone scanners tolerate but the QR standard doesn't allow. They are now drawn the standard way, with a Rotation option to move the finder squares.
 - **Quiet zone.** Codes get the standard white border by default, so they scan on dark or busy backgrounds.
 - **Clear errors.** Invalid settings, text too long for the QR size, and oversized output now show a message instead of silently freezing the preview.
-- **Usability.** File picker for phones, faster updates (rendered shortly after the last change instead of every 500 ms), number fields, labeled controls, and a layout that fits narrow screens.
+- **Usability.** File picker for phones, faster updates (rendered shortly after the last change instead of every 500 ms), sliders with their values shown, a QR size that grows and shrinks to fit the text, labeled controls, and a layout that fits narrow screens.
 - **Cleanup.** One copy of the app page instead of two that had drifted apart, removed the old generator version, the Firebase placeholder pages and Firebase Hosting config, and removed unused code.
 - **Right-sized PNGs.** Downloads are saved in the smallest correct PNG format for their content: a 1-bit bitmap for opaque black and white, an indexed palette for few colors (black, white and transparent fit in 2 bits), grayscale for gray images, and full color only when needed. With default settings this cuts the file from about 16 KB to about 2 KB. The Black and white and Dithering effects now also make each pixel fully opaque or fully transparent, so their output really is two-tone. The format and size are shown under the code. Browsers without `CompressionStream` fall back to a standard full-color PNG.
 - **PNG metadata.** Downloaded PNGs include `Software` and `Comment` text fields linking back to this project.
@@ -72,6 +73,7 @@ The sample image is embedded in `sample-image.js` rather than loaded from `mona-
 - **Reset button.** One click puts every option back to its default, keeping your text and image.
 - **Any language.** Text is encoded as UTF-8, so accented letters, non-Latin scripts and emoji scan correctly. They used to come out garbled.
 - **Clearer file names.** `halftoneqr2.js` is now `app.js` and `qrcodenew.js` is now `qrcode.js`.
+- **Simulated scan.** The page estimates whether the code will scan and warns about settings that break it, with no extra library.
 - **No jQuery.** The app uses plain browser APIs; the 247 KB jQuery 2.1.1 file is gone.
 
 ## Third-party code
