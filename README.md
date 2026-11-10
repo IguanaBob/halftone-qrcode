@@ -12,7 +12,7 @@ Drop in a picture, crop it, tune a few settings, and download the result as a PN
 
 1. Open `index.html` in a browser. It forwards to `public/index.html`, where the app lives. No build step or server is needed.
 2. Drag an image onto the page, or use the file picker (which also works on phones).
-3. Crop and zoom the image in the crop box.
+3. Crop the image in the crop box: drag to move it, and zoom with the slider, mouse wheel or a pinch. Zooming out past the edges leaves the uncovered area transparent. With the crop box selected, the arrow keys move the image, + and - zoom, and 0 resets the crop.
 4. Enter the text or URL to encode, then adjust the options. The preview updates as you go.
 5. Click the generated QR code to download it as `qr.png`.
 
@@ -47,10 +47,10 @@ public/                 The app (also the Firebase Hosting root)
   index.html            The app page
   halftoneqr2.js        Image processing and halftone rendering
   png-encoder.js        PNG export that picks the smallest correct format
+  cropper.js            Crop box: drag, zoom, pinch and keyboard
   style.css             Page styles
   sample-image.js       Startup sample image, embedded as a data URL
   qrcodenew.js          QR encoder (Kazuhiko Arase, MIT, lightly modified)
-  croppie.min.js/.css   Croppie 2.6.4 image cropper (bundled, see below)
   mona-lisa.webp        The sample image as a file (public domain)
 ```
 
@@ -58,7 +58,7 @@ The sample image is embedded in `sample-image.js` rather than loaded from `mona-
 
 ## Changes in this fork
 
-- **Fully offline.** Croppie used to load from a CDN; it is now bundled (see below).
+- **Fully offline, with a built-in cropper.** The app used the Croppie library, loaded from a CDN, for cropping. It was first bundled locally and has now been replaced by a small cropper written for this app (`cropper.js`), so there are no third-party files besides the QR encoder. The new cropper supports drag, wheel and pinch zoom, and keyboard control.
 - **Removed `qrcode_disney.jpg`.** This unused sample image was a photo of Disney advertising posters with Disney's logos and characters, and its photographer is unknown. It was removed to keep only material that is clearly safe to redistribute. It remains in the git history.
 - **Bug fixes.** Grayscale now works; dithering now spreads error to the right neighbors; Pixelation at 100 no longer stops rendering; block sizes other than 3 now place the data dot correctly; dropping something that isn't an image shows a message instead of failing.
 - **Standard orientation and rotation.** Codes used to be drawn mirrored (rows and columns swapped), which most phone scanners tolerate but the QR standard doesn't allow. They are now drawn the standard way, with a Rotation option to move the finder squares.
@@ -74,9 +74,8 @@ The sample image is embedded in `sample-image.js` rather than loaded from `mona-
 
 ## Third-party code
 
-All dependencies are included in this repository, so the app makes no network requests.
+The only dependency is included in this repository, so the app makes no network requests.
 
-- **[Croppie](https://github.com/Foliotek/Croppie) 2.6.4**: an image cropping library from Foliotek Inc., used for the crop and zoom box. It used to load from a CDN; it is now bundled as `public/croppie.min.js` and `public/croppie.min.css`. The JS is byte-identical to the npm release. MIT licensed; see [`public/croppie.LICENSE`](public/croppie.LICENSE).
 - **QR Code Generator for JavaScript** by Kazuhiko Arase. MIT licensed; the notice is in the file header.
 
 ## Background
@@ -87,7 +86,7 @@ Halftone QR codes come from the SIGGRAPH Asia 2013 paper *[Halftone QR Codes](ht
 
 - [Original version](https://jsfiddle.net/lachlan/r8qWV/) by [Lachlan Arthur](http://lach.la)
 - Extended by [Jason Butler](https://github.com/nythrox) (live version: <https://nythrox.github.io/halftone-qrcode/>)
-- This fork, including the offline bundling of Croppie: Jonathan Hull, with help from [Claude](https://claude.com/claude-code) (Anthropic's AI assistant)
+- This fork: Jonathan Hull, with help from [Claude](https://claude.com/claude-code) (Anthropic's AI assistant)
 
 ## License
 

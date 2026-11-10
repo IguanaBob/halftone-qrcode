@@ -82,8 +82,32 @@ input[type="number"] {
     max-width: 100%;
 }
 
-.cr-boundary {
+/* Checkerboard shows where the crop is transparent. */
+.crop-box {
+    display: block;
     max-width: 100%;
+    max-height: none;
+    image-rendering: auto;
+    border: 1px solid #888;
+    background: repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+    cursor: grab;
+    touch-action: none;
+}
+
+.crop-box:active {
+    cursor: grabbing;
+}
+
+.crop-box:focus-visible {
+    outline: 3px solid #4a90d9;
+    outline-offset: 2px;
+}
+
+.crop-zoom {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    margin-top: 8px;
 }
 
 canvas {

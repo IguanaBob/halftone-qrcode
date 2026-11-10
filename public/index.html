@@ -4,12 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Halftone QR Code Generator</title>
-    <script src="croppie.min.js"></script>
     <script src="qrcodenew.js"></script>
     <script src="sample-image.js"></script>
     <script src="png-encoder.js"></script>
+    <script src="cropper.js"></script>
     <script src="halftoneqr2.js"></script>
-    <link rel="stylesheet" href="croppie.min.css" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -116,6 +115,7 @@
           <button type="button" id="reset" title="Set every option back to its default. Keeps your text and image.">Reset options to defaults</button>
         </div>
 
+        <p class="hint">Crop: drag the image to move it. Zoom with the slider, mouse wheel or a pinch.</p>
         <div id="crop"></div>
       </div>
 

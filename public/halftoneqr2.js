@@ -327,10 +327,8 @@ function grayscale(canvas, amount) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  var crop = byId("crop");
-  var croppie = null;
+  var cropper = createCropper(byId("crop"), scheduleRerender);
   var renderTimer = null;
-  var renderId = 0;
 
   function showError(message) {
     var error = byId("error");
@@ -345,50 +343,21 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function rerender() {
-    if (!croppie) return;
-    var settings;
+    var canvas = cropper.result();
+    if (!canvas) return; // no image yet
     try {
-      settings = readSettings();
+      halftoneQR(canvas, readSettings());
+      showError("");
     } catch (e) {
-      showError(e.message);
-      return;
+      showError(e && e.message ? e.message : String(e));
     }
-    var id = ++renderId;
-    croppie.result({ type: "rawcanvas" }).then(function (canvas) {
-      if (id !== renderId) return; // a newer render has started
-      try {
-        halftoneQR(canvas, settings);
-        showError("");
-      } catch (e) {
-        showError(e && e.message ? e.message : String(e));
-      }
-    });
-  }
-
-  function updateCroppie(image) {
-    if (croppie) {
-      croppie.destroy();
-    }
-    var smallestSize = Math.min(image.width, image.height);
-    // Keep the 1.2x boundary inside the column.
-    smallestSize = Math.min(smallestSize, crop.offsetWidth * 0.8);
-    croppie = new Croppie(crop, {
-      url: image.src,
-      enforceBoundary: false,
-      viewport: { width: smallestSize, height: smallestSize },
-      boundary: { width: smallestSize * 1.2, height: smallestSize * 1.2 },
-    });
-    setTimeout(function () {
-      croppie.setZoom(1);
-      scheduleRerender();
-    }, 10);
   }
 
   function loadImage(src) {
     var img = new Image();
     img.onload = function () {
       showError("");
-      updateCroppie(img);
+      cropper.load(img);
     };
     img.onerror = function () {
       showError(
@@ -413,8 +382,6 @@ document.addEventListener("DOMContentLoaded", function () {
     };
     reader.readAsDataURL(file);
   }
-
-  crop.addEventListener("update", scheduleRerender);
 
   document
     .querySelectorAll("input:not(#file), select, textarea")
