@@ -22,6 +22,20 @@ h2 {
     font-weight: normal;
 }
 
+.intro {
+    margin: 0 0 8px;
+    max-width: 40em;
+}
+
+.notice {
+    margin: 0 0 12px;
+    max-width: 40em;
+    padding: 6px 10px;
+    border-left: 3px solid #888;
+    background: #f3f3f3;
+    font-size: 0.9em;
+}
+
 .row {
     display: flex;
     flex-wrap: wrap;

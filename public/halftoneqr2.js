@@ -3,8 +3,32 @@ var QUIET_ZONE_MODULES = 4;
 // Largest output canvas side, in pixels. Browsers fail on much bigger canvases.
 var MAX_OUTPUT_SIZE = 8000;
 
+// Text fields written into every downloaded PNG.
+var PNG_METADATA = {
+  Software:
+    "Halftone QR Code Generator (https://github.com/IguanaBob/halftone-qrcode)",
+  Comment: "Made with https://github.com/IguanaBob/halftone-qrcode",
+};
+
 function byId(id) {
   return document.getElementById(id);
+}
+
+var downloadUrl = null;
+var downloadJob = 0;
+
+// Encodes the output canvas (see png-encoder.js) and points the download
+// link at it. Encoding is asynchronous; only the newest result is used.
+function updateDownload(canvas) {
+  var job = ++downloadJob;
+  encodePng(canvas, PNG_METADATA).then(function (result) {
+    if (job !== downloadJob) return;
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    downloadUrl = URL.createObjectURL(result.blob);
+    byId("download").href = downloadUrl;
+    var kb = (result.blob.size / 1024).toFixed(1);
+    byId("png-info").textContent = " (" + result.format + ", " + kb + " KB)";
+  });
 }
 
 // Reads and validates every option. Throws an Error with a user-facing
@@ -131,7 +155,7 @@ function halftoneQR(imageCanvas, settings) {
   }
   outputCtx.drawImage(codeCanvas, margin, margin);
 
-  byId("download").href = outputCanvas.toDataURL();
+  updateDownload(outputCanvas);
 }
 
 function drawTransparent(canvas, QRBytes, controlBytes, settings) {
@@ -238,12 +262,14 @@ function dither(canvas, threshold, cellSize) {
     }
   }
 
-  // Paint each cell with its result, keeping the original alpha.
+  // Paint each cell with its result. Alpha is snapped too, so pixels are
+  // fully opaque or fully clear.
   for (var py = 0; py < height; py++) {
     var base = Math.floor(py / cellSize) * cols;
     for (var px = 0; px < width; px++) {
       var p = (py * width + px) * 4;
       d[p] = d[p + 1] = d[p + 2] = grey[base + Math.floor(px / cellSize)];
+      d[p + 3] = d[p + 3] >= 128 ? 255 : 0;
     }
   }
   ctx.putImageData(pixels, 0, 0);
@@ -269,7 +295,8 @@ function pixelate(canvas, pixelation) {
   ctx.drawImage(tempCanvas, 0, 0, width, height);
 }
 
-// Black and white: each pixel becomes black or white around a threshold.
+// Black and white: each pixel becomes black or white around a threshold,
+// and fully opaque or fully clear, so the result is truly two-tone.
 function contrast(canvas, threshold) {
   var ctx = canvas.getContext("2d");
   var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -277,6 +304,7 @@ function contrast(canvas, threshold) {
   for (var i = 0; i < d.length; i += 4) {
     d[i] = d[i + 1] = d[i + 2] =
       (d[i] + d[i + 1] + d[i + 2]) / 3 > threshold ? 255 : 0;
+    d[i + 3] = d[i + 3] >= 128 ? 255 : 0;
   }
   ctx.putImageData(pixels, 0, 0);
 }

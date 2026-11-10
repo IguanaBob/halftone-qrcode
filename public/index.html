@@ -7,6 +7,7 @@
     <script src="croppie.min.js"></script>
     <script src="qrcodenew.js"></script>
     <script src="sample-image.js"></script>
+    <script src="png-encoder.js"></script>
     <script src="halftoneqr2.js"></script>
     <link rel="stylesheet" href="croppie.min.css" />
     <link rel="stylesheet" href="style.css" />
@@ -15,6 +16,15 @@
     <div class="row">
       <div class="options">
         <h1>Halftone QR Code Generator</h1>
+        <p class="intro">
+          Turn any picture into a QR code that still scans: the image shows
+          through the code as a halftone pattern.
+        </p>
+        <p class="notice">
+          This tool runs entirely in your browser. Your images and text are
+          never uploaded. You are responsible for making sure you have the
+          rights to use any image you put in a QR code.
+        </p>
         <h2>
           Drop an image onto the page or choose a file. The QR code updates as
           you change the settings.
@@ -104,7 +114,7 @@
         <a id="download" href="about:blank" download="qr.png" title="Download QR Code">
           <canvas id="output"></canvas>
         </a>
-        <p class="hint">Click the QR code to download it as a PNG.</p>
+        <p class="hint">Click the QR code to download it as a PNG<span id="png-info"></span>.</p>
       </div>
     </div>
 

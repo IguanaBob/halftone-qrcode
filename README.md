@@ -6,6 +6,8 @@ Drop in a picture, crop it, tune a few settings, and download the result as a PN
 
 **Try it online:** <https://iguanabob.github.io/halftone-qrcode/>
 
+> **Note:** This tool runs entirely locally in your browser. Your images and text are never uploaded. You are responsible for making sure you have the rights to use any image you put in a QR code.
+
 ## Usage
 
 1. Open `index.html` in a browser. It forwards to `public/index.html`, where the app lives. No build step or server is needed.
@@ -41,6 +43,7 @@ index.html              Forwards to public/index.html
 public/                 The app (also the Firebase Hosting root)
   index.html            The app page
   halftoneqr2.js        Image processing and halftone rendering
+  png-encoder.js        PNG export that picks the smallest correct format
   style.css             Page styles
   sample-image.js       Startup sample image, embedded as a data URL
   qrcodenew.js          QR encoder (Kazuhiko Arase, MIT, lightly modified)
@@ -60,6 +63,8 @@ The sample image is embedded in `sample-image.js` rather than loaded from `mona-
 - **Clear errors.** Invalid settings, text too long for the QR size, and oversized output now show a message instead of silently freezing the preview.
 - **Usability.** File picker for phones, faster updates (rendered shortly after the last change instead of every 500 ms), number fields, labelled controls, and a layout that fits narrow screens.
 - **Cleanup.** One copy of the app page instead of two that had drifted apart, removed the old generator version and Firebase placeholder pages, and removed unused code.
+- **Right-sized PNGs.** Downloads are saved in the smallest correct PNG format for their content: a 1-bit bitmap for opaque black and white, an indexed palette for few colours (black, white and transparent fits in 2 bits), greyscale for grey images, and full colour only when needed. With default settings this cuts the file from about 16 KB to about 2 KB. Black and white and Dithering now also make each pixel fully opaque or fully transparent, so their output really is two-tone. The format and size are shown under the code. Browsers without `CompressionStream` fall back to a standard full-colour PNG.
+- **PNG metadata.** Downloaded PNGs include `Software` and `Comment` text fields linking back to this project.
 - **No jQuery.** The app uses plain browser APIs; the 247KB jQuery 2.1.1 file is gone.
 
 ## Third-party code
