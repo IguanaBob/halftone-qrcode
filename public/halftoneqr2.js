@@ -59,6 +59,7 @@ function readSettings() {
     pixelSize: pixelSize, // pixels per sub-cell
     subCells: subCells, // sub-cells per module side
     blockSize: subCells * pixelSize, // pixels per module side
+    dotSize: wholeNumber("dot-size", "Dot size", 10, 100), // % of module side
     background: byId("background").value,
     quietZone: byId("quiet-zone").checked,
     pixelation: optional("pixelate", "pixelation"),
@@ -160,22 +161,23 @@ function halftoneQR(imageCanvas, settings) {
 
 function drawTransparent(canvas, QRBytes, controlBytes, settings) {
   var ctx = canvas.getContext("2d");
-  var pixelSize = settings.pixelSize;
   var blockSize = settings.blockSize;
-  // Offset of the middle sub-cell within a module.
-  var center = Math.floor(settings.subCells / 2) * pixelSize;
+  // Side of the data dot in pixels, and its offset to sit centred in the
+  // module. 33% at block size 3 is exactly the middle sub-cell.
+  var dot = Math.max(1, Math.round((blockSize * settings.dotSize) / 100));
+  var offset = Math.floor((blockSize - dot) / 2);
 
   // Matrices are [row][column]: rows go down (y), columns across (x).
 
-  // Data modules: only the middle sub-cell carries the bit.
+  // Data modules: only the centre dot carries the bit.
   for (var row = 0; row < QRBytes.length; row++) {
     for (var col = 0; col < QRBytes[row].length; col++) {
       ctx.fillStyle = QRBytes[row][col] ? "black" : "white";
       ctx.fillRect(
-        col * blockSize + center,
-        row * blockSize + center,
-        pixelSize,
-        pixelSize
+        col * blockSize + offset,
+        row * blockSize + offset,
+        dot,
+        dot
       );
     }
   }
@@ -421,6 +423,11 @@ document.addEventListener("DOMContentLoaded", function () {
       el.addEventListener("change", scheduleRerender);
     });
 
+  // Show the dot size percentage beside its slider.
+  byId("dot-size").addEventListener("input", function () {
+    byId("dot-size-label").textContent = this.value + "%";
+  });
+
   // Rotation buttons turn the code 90 degrees at a time.
   function rotateBy(degrees) {
     var input = byId("rotation");
@@ -434,6 +441,30 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   byId("rotate-right").addEventListener("click", function () {
     rotateBy(90);
+  });
+
+  // Reset puts every option back to the default written in the HTML,
+  // leaving the text to encode and the image alone.
+  byId("reset").addEventListener("click", function () {
+    document
+      .querySelectorAll(".options input:not(#file), .options select")
+      .forEach(function (el) {
+        if (el.closest("#crop")) return; // leave the crop and zoom alone
+        if (el.type === "checkbox") {
+          el.checked = el.defaultChecked;
+        } else if (el.tagName === "SELECT") {
+          el.querySelectorAll("option").forEach(function (option) {
+            option.selected = option.defaultSelected;
+          });
+        } else {
+          el.value = el.defaultValue;
+        }
+      });
+    // A hidden input's default follows its value, so set rotation directly.
+    byId("rotation").value = "0";
+    byId("rotation-label").textContent = "0°";
+    byId("dot-size-label").textContent = byId("dot-size").value + "%";
+    scheduleRerender();
   });
 
   byId("file").addEventListener("change", function () {

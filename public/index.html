@@ -66,6 +66,12 @@
         </div>
 
         <div class="field">
+          <label for="dot-size">Dot size (bigger scans more easily, smaller shows more image)</label>
+          <input type="range" id="dot-size" min="10" max="100" step="1" value="33" />
+          <output id="dot-size-label" for="dot-size">33%</output>
+        </div>
+
+        <div class="field">
           <label>Rotation (moves the corner squares; the image stays upright)</label>
           <input type="hidden" id="rotation" value="0" />
           <button type="button" id="rotate-left" title="Rotate left 90°">⟲ Left</button>
@@ -104,6 +110,10 @@
         <div class="field effect">
           <label><input type="checkbox" id="blacknwhite" checked /> Black and white</label>
           <input type="range" min="0" max="255" value="127" id="contrast" aria-label="Black and white threshold" />
+        </div>
+
+        <div class="field">
+          <button type="button" id="reset" title="Set every option back to its default. Keeps your text and image.">Reset options to defaults</button>
         </div>
 
         <div id="crop"></div>
