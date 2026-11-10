@@ -1,139 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Halftone QR Code Generator</title>
-    <script src="jquery-2.1.1.js"></script>
     <script src="croppie.min.js"></script>
     <script src="qrcodenew.js"></script>
+    <script src="sample-image.js"></script>
     <script src="halftoneqr2.js"></script>
-    <link
-      rel="stylesheet"
-      href="croppie.min.css"
-    />
-    <style>
-      body {
-        padding: 30px;
-      }
-      .options {
-        width: 50%;
-      }
-      #crop {
-        width: 100%;
-        max-width: 100%;
-      }
-      .cr-boundary {
-        max-width: 100%;
-      }
-      .display {
-        width: 50%;
-      }
-      .row {
-        display: flex;
-      }
-      canvas {
-        margin: 30px;
-        display: block;
-        box-shadow: 0px solid transparent;
-        image-rendering: -webkit-crisp-edges;
-        image-rendering: crisp-edges;
-        max-width: 100%;
-        max-height: 100vh;
-        image-rendering: pixelated;
-      }
-    </style>
+    <link rel="stylesheet" href="croppie.min.css" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="row">
       <div class="options">
         <h1>Halftone QR Code Generator</h1>
-        <h2>Drop an image into your browser, then click generate.</h2>
-        <textarea id="input" cols="50" rows="5">shorturl.at/mCOP0</textarea
-        ><br />
-        Redundancy (error correction level):
-        <select id="error_level">
-          <option value="L">Low (7%)</option>
-          <option value="M">Medium (15%)</option>
-          <option value="Q">Quartile (25%)</option>
-          <option value="H" selected>High (30%)</option> </select
-        ><br />
-        QR size: (up to 40)
-        <input type="text" id="size" value="6" />
-        <br />
-        Quality
-        <input type="text" id="quality" value="10" />
-        <br />Block Size
-        <input type="text" id="block-size" value="3" />(recommended 3 for scan
-        to work) <br />Background Type:
-        <select id="background">
-          <option value="large">Noise (Large)</option>
-          <option value="trans">Transparent</option>
-          <option value="noise">Noise</option>
-        </select>
-        <br />
-        pixelation
-        <input type="checkbox" id="pixelate" checked />
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value="92.5"
-          class="slider"
-          id="pixelation"
-        /><br />
-        dithering
-        <input type="checkbox" id="should-dither" />
-        <input
-          type="range"
-          min="0"
-          max="255"
-          value="127"
-          class="slider"
-          id="dither"
-        />
-        <br />
-        black and white
-        <input type="checkbox" id="blacknwhite" checked />
-        <input
-          type="range"
-          min="0"
-          max="255"
-          value="127"
-          class="slider"
-          id="contrast"
-        />
-        <br />
-        greyscale
-        <input type="checkbox" id="should-greyscale" />
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value="100"
-          class="slider"
-          id="greyscale"
-        />
+        <h2>
+          Drop an image onto the page or choose a file. The QR code updates as
+          you change the settings.
+        </h2>
+
+        <div class="field">
+          <label for="file">Image</label>
+          <input type="file" id="file" accept="image/*" />
+        </div>
+
+        <div class="field">
+          <label for="input">Text or URL to encode</label>
+          <textarea id="input" rows="4">shorturl.at/mCOP0</textarea>
+        </div>
+
+        <div class="field">
+          <label for="error_level">Redundancy (error correction level)</label>
+          <select id="error_level">
+            <option value="L">Low (7%)</option>
+            <option value="M">Medium (15%)</option>
+            <option value="Q">Quartile (25%)</option>
+            <option value="H" selected>High (30%)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="size">QR size (1 to 40, or 0 for automatic)</label>
+          <input type="number" id="size" value="6" min="0" max="40" step="1" />
+        </div>
+
+        <div class="field">
+          <label for="quality">Quality (1 to 20)</label>
+          <input type="number" id="quality" value="3" min="1" max="20" step="1" />
+        </div>
+
+        <div class="field">
+          <label for="block-size">Block size (3 recommended for scanning)</label>
+          <input type="number" id="block-size" value="3" min="1" max="9" step="1" />
+        </div>
+
+        <div class="field">
+          <label for="background">Background type</label>
+          <select id="background">
+            <option value="trans">Transparent</option>
+            <option value="noise">Noise</option>
+            <option value="large">Noise (Large)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label><input type="checkbox" id="quiet-zone" checked /> White border (quiet zone, helps scanning)</label>
+        </div>
+
+        <div class="field effect">
+          <label><input type="checkbox" id="pixelate" checked /> Pixelation</label>
+          <input type="range" min="0" max="100" value="85" id="pixelation" aria-label="Pixelation amount" />
+        </div>
+
+        <div class="field effect">
+          <label><input type="checkbox" id="should-greyscale" /> Greyscale</label>
+          <input type="range" min="0" max="100" value="100" id="greyscale" aria-label="Greyscale amount" />
+        </div>
+
+        <div class="field effect">
+          <label><input type="checkbox" id="should-dither" /> Dithering</label>
+          <input type="range" min="0" max="255" value="127" id="dither" aria-label="Dithering threshold" />
+        </div>
+
+        <div class="field effect">
+          <label><input type="checkbox" id="blacknwhite" checked /> Black and white</label>
+          <input type="range" min="0" max="255" value="127" id="contrast" aria-label="Black and white threshold" />
+        </div>
+
         <div id="crop"></div>
-        <!-- <input type="button" id="go" value="Generate" /><br /> -->
       </div>
+
       <div class="display">
-        <a
-          id="download"
-          href="about:blank"
-          download="qr.png"
-          target="_blank"
-          title="Download QR Code"
-          ><canvas id="output"></canvas
-        ></a>
+        <p id="error" role="alert" hidden></p>
+        <a id="download" href="about:blank" download="qr.png" title="Download QR Code">
+          <canvas id="output"></canvas>
+        </a>
+        <p class="hint">Click the QR code to download it as a PNG.</p>
       </div>
     </div>
-    <br />
-    Credits:
-    <a href="https://github.com/nythrox" target="_blank">Jason</a>
-    <br />
-    <a href="https://jsfiddle.net/lachlan/r8qWV/" target="_blank"> Original version</a> by
-    <a href="http://lach.la" target="_blank">Lachlan</a>
+
+    <footer>
+      Credits:
+      <a href="https://github.com/nythrox" target="_blank" rel="noopener">Jason</a>
+      <br />
+      <a href="https://jsfiddle.net/lachlan/r8qWV/" target="_blank" rel="noopener">Original version</a>
+      by <a href="http://lach.la" target="_blank" rel="noopener">Lachlan</a>
+    </footer>
 
     <div id="overlay">Drop image</div>
   </body>
