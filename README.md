@@ -45,12 +45,12 @@ Always test the result with a phone or two before using it. Aggressive settings 
 index.html              Forwards to public/index.html
 public/                 The app
   index.html            The app page
-  halftoneqr2.js        Image processing and halftone rendering
+  app.js                Image processing and halftone rendering
   png-encoder.js        PNG export that picks the smallest correct format
   cropper.js            Crop box: drag, zoom, pinch and keyboard
   style.css             Page styles
   sample-image.js       Startup sample image, embedded as a data URL
-  qrcodenew.js          QR encoder (Kazuhiko Arase, MIT, lightly modified)
+  qrcode.js             QR encoder (Kazuhiko Arase, MIT, lightly modified)
   mona-lisa.webp        The sample image as a file (public domain)
 ```
 
@@ -70,6 +70,8 @@ The sample image is embedded in `sample-image.js` rather than loaded from `mona-
 - **PNG metadata.** Downloaded PNGs include `Software` and `Comment` text fields linking back to this project.
 - **Adjustable dot size.** A Dot size slider sets how big the data dots are, trading scan reliability against how much of the image shows.
 - **Reset button.** One click puts every option back to its default, keeping your text and image.
+- **Any language.** Text is encoded as UTF-8, so accented letters, non-Latin scripts and emoji scan correctly. They used to come out garbled.
+- **Clearer file names.** `halftoneqr2.js` is now `app.js` and `qrcodenew.js` is now `qrcode.js`.
 - **No jQuery.** The app uses plain browser APIs; the 247 KB jQuery 2.1.1 file is gone.
 
 ## Third-party code

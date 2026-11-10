@@ -89,6 +89,12 @@ function rotateMatrix(matrix, degrees) {
 
 // Returns the module matrix. With onlyControl, only the function patterns
 // (finders, timing, alignment, format info) are set; data modules are null.
+// Encode text as UTF-8, which phone scanners expect. The library's default
+// keeps only the low byte of each character, garbling anything non-ASCII.
+qrcode2.stringToBytes = function (text) {
+  return Array.from(new TextEncoder().encode(text));
+};
+
 function makeQR(settings, onlyControl) {
   var qr = qrcode2(settings.qrSize, settings.errorLevel);
   qr.addData(settings.text);
