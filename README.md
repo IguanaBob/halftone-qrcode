@@ -43,7 +43,7 @@ Always test the result with a phone or two before using it. Aggressive settings 
 
 ```
 index.html              Forwards to public/index.html
-public/                 The app (also the Firebase Hosting root)
+public/                 The app
   index.html            The app page
   halftoneqr2.js        Image processing and halftone rendering
   png-encoder.js        PNG export that picks the smallest correct format
@@ -65,7 +65,7 @@ The sample image is embedded in `sample-image.js` rather than loaded from `mona-
 - **Quiet zone.** Codes get the standard white border by default, so they scan on dark or busy backgrounds.
 - **Clear errors.** Invalid settings, text too long for the QR size, and oversized output now show a message instead of silently freezing the preview.
 - **Usability.** File picker for phones, faster updates (rendered shortly after the last change instead of every 500 ms), number fields, labeled controls, and a layout that fits narrow screens.
-- **Cleanup.** One copy of the app page instead of two that had drifted apart, removed the old generator version and Firebase placeholder pages, and removed unused code.
+- **Cleanup.** One copy of the app page instead of two that had drifted apart, removed the old generator version, the Firebase placeholder pages and Firebase Hosting config, and removed unused code.
 - **Right-sized PNGs.** Downloads are saved in the smallest correct PNG format for their content: a 1-bit bitmap for opaque black and white, an indexed palette for few colors (black, white and transparent fit in 2 bits), grayscale for gray images, and full color only when needed. With default settings this cuts the file from about 16 KB to about 2 KB. The Black and white and Dithering effects now also make each pixel fully opaque or fully transparent, so their output really is two-tone. The format and size are shown under the code. Browsers without `CompressionStream` fall back to a standard full-color PNG.
 - **PNG metadata.** Downloaded PNGs include `Software` and `Comment` text fields linking back to this project.
 - **Adjustable dot size.** A Dot size slider sets how big the data dots are, trading scan reliability against how much of the image shows.
