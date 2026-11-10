@@ -4,6 +4,8 @@ A browser-based generator for **halftone QR codes**: QR codes that show an image
 
 Drop in a picture, crop it, tune a few settings, and download the result as a PNG. Everything runs in your browser. Nothing is uploaded, and no external resources are loaded, so it works fully offline.
 
+**Try it online:** <https://iguanabob.github.io/halftone-qrcode/>
+
 ## Usage
 
 1. Open `index.html` in a browser. It forwards to `public/index.html`, where the app lives. No build step or server is needed.
