@@ -56,6 +56,14 @@
         </div>
 
         <div class="field">
+          <label>Rotation (moves the corner squares; the image stays upright)</label>
+          <input type="hidden" id="rotation" value="0" />
+          <button type="button" id="rotate-left" title="Rotate left 90°">⟲ Left</button>
+          <button type="button" id="rotate-right" title="Rotate right 90°">Right ⟳</button>
+          <output id="rotation-label" aria-live="polite">0°</output>
+        </div>
+
+        <div class="field">
           <label for="background">Background type</label>
           <select id="background">
             <option value="trans">Transparent</option>

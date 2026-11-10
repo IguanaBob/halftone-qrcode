@@ -20,6 +20,7 @@ Drop in a picture, crop it, tune a few settings, and download the result as a PN
 | QR size | QR version, from 1 to 40, or 0 to pick the smallest size that fits the text. Larger versions hold more data and give more detail. |
 | Quality | Pixels per sub-module, from 1 to 20. Higher values give a bigger, more detailed output. |
 | Block size | Sub-modules per side of each QR module, from 1 to 9. **3 is recommended** for reliable scanning. |
+| Rotation | The Left and Right buttons turn the QR pattern 90° at a time while the image stays upright; the current angle is shown beside them. Use it to choose which three corners get the large finder squares, for example to keep them off a face. Codes scan at any rotation. |
 | Background type | What shows where the image is transparent: nothing, fine noise, or large noise. |
 | White border | Adds the 4-module blank margin (quiet zone) that the QR standard requires. Leave it on unless you add your own margin. |
 | Pixelation | Pixelates the image before it is combined with the code. |
@@ -52,6 +53,7 @@ The sample image is embedded in `sample-image.js` rather than loaded from `mona-
 - **Fully offline.** Croppie used to load from a CDN; it is now bundled (see below).
 - **Removed `qrcode_disney.jpg`.** This unused sample image was a photo of Disney advertising posters with Disney's logos and characters, and its photographer is unknown. It was removed to keep only material that is clearly safe to redistribute. It remains in the git history.
 - **Bug fixes.** Greyscale now works; dithering now spreads error to the right neighbours; Pixelation at 100 no longer stops rendering; block sizes other than 3 now place the data dot correctly; dropping something that isn't an image shows a message instead of failing.
+- **Standard orientation and rotation.** Codes used to be drawn mirrored (rows and columns swapped), which most phone scanners tolerate but the QR standard doesn't allow. They are now drawn the standard way, with a Rotation option to move the finder squares.
 - **Quiet zone.** Codes get the standard white border by default, so they scan on dark or busy backgrounds.
 - **Clear errors.** Invalid settings, text too long for the QR size, and oversized output now show a message instead of silently freezing the preview.
 - **Usability.** File picker for phones, faster updates (rendered shortly after the last change instead of every 500 ms), number fields, labelled controls, and a layout that fits narrow screens.

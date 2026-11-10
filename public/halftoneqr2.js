@@ -41,7 +41,25 @@ function readSettings() {
     greyscale: optional("should-greyscale", "greyscale"),
     dither: optional("should-dither", "dither"),
     contrast: optional("blacknwhite", "contrast"),
+    rotation: Number(byId("rotation").value), // degrees clockwise
   };
+}
+
+// Returns a copy of a square module matrix turned clockwise by 0, 90, 180
+// or 270 degrees. Matrices are indexed [row][column].
+function rotateMatrix(matrix, degrees) {
+  var n = matrix.length;
+  var turns = ((degrees / 90) % 4 + 4) % 4;
+  var result = matrix;
+  for (var t = 0; t < turns; t++) {
+    var next = [];
+    for (var r = 0; r < n; r++) {
+      next.push([]);
+      for (var c = 0; c < n; c++) next[r].push(result[n - 1 - c][r]);
+    }
+    result = next;
+  }
+  return result;
 }
 
 // Returns the module matrix. With onlyControl, only the function patterns
@@ -67,8 +85,8 @@ function makeQR(settings, onlyControl) {
 }
 
 function halftoneQR(imageCanvas, settings) {
-  var QRBytes = makeQR(settings, false);
-  var controlBytes = makeQR(settings, true);
+  var QRBytes = rotateMatrix(makeQR(settings, false), settings.rotation);
+  var controlBytes = rotateMatrix(makeQR(settings, true), settings.rotation);
 
   var codeSize = QRBytes.length * settings.blockSize;
   var margin = settings.quietZone ? QUIET_ZONE_MODULES * settings.blockSize : 0;
@@ -123,13 +141,15 @@ function drawTransparent(canvas, QRBytes, controlBytes, settings) {
   // Offset of the middle sub-cell within a module.
   var center = Math.floor(settings.subCells / 2) * pixelSize;
 
+  // Matrices are [row][column]: rows go down (y), columns across (x).
+
   // Data modules: only the middle sub-cell carries the bit.
-  for (var byteRow = 0; byteRow < QRBytes.length; byteRow++) {
-    for (var byteCell = 0; byteCell < QRBytes[byteRow].length; byteCell++) {
-      ctx.fillStyle = QRBytes[byteRow][byteCell] ? "black" : "white";
+  for (var row = 0; row < QRBytes.length; row++) {
+    for (var col = 0; col < QRBytes[row].length; col++) {
+      ctx.fillStyle = QRBytes[row][col] ? "black" : "white";
       ctx.fillRect(
-        byteRow * blockSize + center,
-        byteCell * blockSize + center,
+        col * blockSize + center,
+        row * blockSize + center,
         pixelSize,
         pixelSize
       );
@@ -137,11 +157,11 @@ function drawTransparent(canvas, QRBytes, controlBytes, settings) {
   }
 
   // Function patterns are drawn solid so scanners can lock on.
-  for (var row = 0; row < controlBytes.length; row++) {
-    for (var cell = 0; cell < controlBytes[row].length; cell++) {
-      if (controlBytes[row][cell] !== null) {
-        ctx.fillStyle = controlBytes[row][cell] === true ? "black" : "white";
-        ctx.fillRect(row * blockSize, cell * blockSize, blockSize, blockSize);
+  for (var r = 0; r < controlBytes.length; r++) {
+    for (var c = 0; c < controlBytes[r].length; c++) {
+      if (controlBytes[r][c] !== null) {
+        ctx.fillStyle = controlBytes[r][c] === true ? "black" : "white";
+        ctx.fillRect(c * blockSize, r * blockSize, blockSize, blockSize);
       }
     }
   }
@@ -152,21 +172,21 @@ function drawRandomBytes(canvas, QRBytes, settings, big) {
   var pixelSize = settings.pixelSize;
   var blockSize = settings.blockSize;
 
-  for (var byteRow = 0; byteRow < QRBytes.length; byteRow++) {
-    for (var byteCell = 0; byteCell < QRBytes[byteRow].length; byteCell++) {
+  for (var row = 0; row < QRBytes.length; row++) {
+    for (var col = 0; col < QRBytes[row].length; col++) {
       if (big) {
-        if (QRBytes[byteRow][byteCell] !== null) {
-          ctx.fillStyle = QRBytes[byteRow][byteCell] === true ? "black" : "white";
-          ctx.fillRect(byteRow * blockSize, byteCell * blockSize, blockSize, blockSize);
+        if (QRBytes[row][col] !== null) {
+          ctx.fillStyle = QRBytes[row][col] === true ? "black" : "white";
+          ctx.fillRect(col * blockSize, row * blockSize, blockSize, blockSize);
         }
         continue;
       }
       for (var subRow = 0; subRow < settings.subCells; subRow++) {
-        for (var subCell = 0; subCell < settings.subCells; subCell++) {
+        for (var subCol = 0; subCol < settings.subCells; subCol++) {
           ctx.fillStyle = Math.random() < 0.5 ? "white" : "black";
           ctx.fillRect(
-            byteRow * blockSize + subRow * pixelSize,
-            byteCell * blockSize + subCell * pixelSize,
+            col * blockSize + subCol * pixelSize,
+            row * blockSize + subRow * pixelSize,
             pixelSize,
             pixelSize
           );
@@ -372,6 +392,21 @@ document.addEventListener("DOMContentLoaded", function () {
       el.addEventListener("input", scheduleRerender);
       el.addEventListener("change", scheduleRerender);
     });
+
+  // Rotation buttons turn the code 90 degrees at a time.
+  function rotateBy(degrees) {
+    var input = byId("rotation");
+    var value = (((Number(input.value) + degrees) % 360) + 360) % 360;
+    input.value = value;
+    byId("rotation-label").textContent = value + "°";
+    scheduleRerender();
+  }
+  byId("rotate-left").addEventListener("click", function () {
+    rotateBy(-90);
+  });
+  byId("rotate-right").addEventListener("click", function () {
+    rotateBy(90);
+  });
 
   byId("file").addEventListener("change", function () {
     loadFile(this.files[0]);
