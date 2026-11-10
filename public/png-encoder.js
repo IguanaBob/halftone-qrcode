@@ -1,10 +1,10 @@
 // PNG encoder that picks the smallest correct format for a canvas:
 //
-//   only black and white, opaque   -> 1-bit greyscale (a true bitmap)
-//   up to 16 colours               -> 1/2/4-bit indexed palette (+ tRNS)
-//   only greys, opaque             -> 8-bit greyscale
-//   up to 256 colours              -> 8-bit indexed palette (+ tRNS)
-//   only greys, with transparency  -> 8-bit greyscale + alpha
+//   only black and white, opaque   -> 1-bit grayscale (a true bitmap)
+//   up to 16 colors                -> 1/2/4-bit indexed palette (+ tRNS)
+//   only grays, opaque             -> 8-bit grayscale
+//   up to 256 colors               -> 8-bit indexed palette (+ tRNS)
+//   only grays, with transparency  -> 8-bit grayscale + alpha
 //   anything else                  -> 8-bit RGB or RGBA
 //
 // Browsers always export canvases as 8-bit RGBA, which wastes space for the
@@ -55,64 +55,64 @@ function textChunks(metadata) {
   });
 }
 
-// Looks at every pixel and decides the PNG colour type and bit depth.
+// Looks at every pixel and decides the PNG color type and bit depth.
 function choosePngFormat(data) {
   var opaque = true;
-  var grey = true;
-  var colours = new Map(); // key -> [r, g, b, a]
+  var gray = true;
+  var colors = new Map(); // key -> [r, g, b, a]
   var tooMany = false;
 
   for (var i = 0; i < data.length; i += 4) {
     var a = data[i + 3];
     if (a !== 255) opaque = false;
     if (a !== 0 && !(data[i] === data[i + 1] && data[i + 1] === data[i + 2])) {
-      grey = false;
+      gray = false;
     }
     if (!tooMany) {
-      // All fully transparent pixels count as one colour.
+      // All fully transparent pixels count as one color.
       var key = a === 0 ? 0 :
         ((data[i] << 24) | (data[i + 1] << 16) | (data[i + 2] << 8) | a) >>> 0;
-      if (!colours.has(key)) {
-        colours.set(key, a === 0 ? [0, 0, 0, 0] : [data[i], data[i + 1], data[i + 2], a]);
-        if (colours.size > 256) tooMany = true;
+      if (!colors.has(key)) {
+        colors.set(key, a === 0 ? [0, 0, 0, 0] : [data[i], data[i + 1], data[i + 2], a]);
+        if (colors.size > 256) tooMany = true;
       }
     }
   }
 
   var BLACK = 0x000000ff;
   var WHITE = 0xffffffff;
-  var bitmap = opaque && !tooMany && Array.from(colours.keys()).every(function (k) {
+  var bitmap = opaque && !tooMany && Array.from(colors.keys()).every(function (k) {
     return k === BLACK || k === WHITE;
   });
 
   if (bitmap) return { colorType: 0, bitDepth: 1, name: "1-bit black and white" };
-  if (!tooMany && colours.size <= 16) return paletteFormat(colours);
-  if (grey && opaque) return { colorType: 0, bitDepth: 8, name: "8-bit greyscale" };
-  if (!tooMany) return paletteFormat(colours);
-  if (grey) return { colorType: 4, bitDepth: 8, name: "8-bit greyscale with transparency" };
-  if (opaque) return { colorType: 2, bitDepth: 8, name: "24-bit colour" };
-  return { colorType: 6, bitDepth: 8, name: "32-bit colour with transparency" };
+  if (!tooMany && colors.size <= 16) return paletteFormat(colors);
+  if (gray && opaque) return { colorType: 0, bitDepth: 8, name: "8-bit grayscale" };
+  if (!tooMany) return paletteFormat(colors);
+  if (gray) return { colorType: 4, bitDepth: 8, name: "8-bit grayscale with transparency" };
+  if (opaque) return { colorType: 2, bitDepth: 8, name: "24-bit color" };
+  return { colorType: 6, bitDepth: 8, name: "32-bit color with transparency" };
 }
 
-function paletteFormat(colours) {
-  var size = colours.size;
+function paletteFormat(colors) {
+  var size = colors.size;
   var bitDepth = size <= 2 ? 1 : size <= 4 ? 2 : size <= 16 ? 4 : 8;
   // Translucent entries first, so the tRNS chunk can stop early.
-  var keys = Array.from(colours.keys()).sort(function (x, y) {
-    return (colours.get(x)[3] === 255) - (colours.get(y)[3] === 255);
+  var keys = Array.from(colors.keys()).sort(function (x, y) {
+    return (colors.get(x)[3] === 255) - (colors.get(y)[3] === 255);
   });
   var index = new Map();
   keys.forEach(function (k, i) { index.set(k, i); });
   return {
     colorType: 3,
     bitDepth: bitDepth,
-    name: bitDepth + "-bit indexed (" + size + " colours)",
-    palette: keys.map(function (k) { return colours.get(k); }),
+    name: bitDepth + "-bit indexed (" + size + " colors)",
+    palette: keys.map(function (k) { return colors.get(k); }),
     index: index,
   };
 }
 
-// Channels per pixel for each colour type.
+// Channels per pixel for each color type.
 var PNG_CHANNELS = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
 
 // Builds the unfiltered bytes of one row in the chosen format.
@@ -242,7 +242,7 @@ function browserPng(canvas, metadata) {
     .concat([png.subarray(afterHeader)]);
   return {
     blob: new Blob(parts, { type: "image/png" }),
-    format: "32-bit colour with transparency",
+    format: "32-bit color with transparency",
   };
 }
 

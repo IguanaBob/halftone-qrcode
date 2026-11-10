@@ -24,12 +24,12 @@ Drop in a picture, crop it, tune a few settings, and download the result as a PN
 | QR size | QR version, from 1 to 40, or 0 to pick the smallest size that fits the text. Larger versions hold more data and give more detail. |
 | Quality | Pixels per sub-module, from 1 to 20. Higher values give a bigger, more detailed output. |
 | Block size | Sub-modules per side of each QR module, from 1 to 9. **3 is recommended** for reliable scanning. |
-| Dot size | Size of the data dot in the centre of each module, from 10% to 100% of the module. Bigger dots scan more reliably; smaller dots let more of the image show. The default, 33%, is one sub-module at block size 3. The corner and timing patterns are always solid. |
+| Dot size | Size of the data dot in the center of each module, from 10% to 100% of the module. Bigger dots scan more reliably; smaller dots let more of the image show. The default, 33%, is one sub-module at block size 3. The corner and timing patterns are always solid. |
 | Rotation | The Left and Right buttons turn the QR pattern 90° at a time while the image stays upright; the current angle is shown beside them. Use it to choose which three corners get the large finder squares, for example to keep them off a face. Codes scan at any rotation. |
 | Background type | What shows where the image is transparent: nothing, fine noise, or large noise. |
 | White border | Adds the 4-module blank margin (quiet zone) that the QR standard requires. Leave it on unless you add your own margin. |
 | Pixelation | Pixelates the image before it is combined with the code. |
-| Greyscale | Desaturates the image by an adjustable amount. |
+| Grayscale | Desaturates the image by an adjustable amount. |
 | Dithering | Atkinson dithering on the sub-module grid, with an adjustable threshold. Turn off Black and white to see its effect. |
 | Black and white | Converts the image to pure black and white at an adjustable threshold. |
 
@@ -60,17 +60,17 @@ The sample image is embedded in `sample-image.js` rather than loaded from `mona-
 
 - **Fully offline.** Croppie used to load from a CDN; it is now bundled (see below).
 - **Removed `qrcode_disney.jpg`.** This unused sample image was a photo of Disney advertising posters with Disney's logos and characters, and its photographer is unknown. It was removed to keep only material that is clearly safe to redistribute. It remains in the git history.
-- **Bug fixes.** Greyscale now works; dithering now spreads error to the right neighbours; Pixelation at 100 no longer stops rendering; block sizes other than 3 now place the data dot correctly; dropping something that isn't an image shows a message instead of failing.
+- **Bug fixes.** Grayscale now works; dithering now spreads error to the right neighbors; Pixelation at 100 no longer stops rendering; block sizes other than 3 now place the data dot correctly; dropping something that isn't an image shows a message instead of failing.
 - **Standard orientation and rotation.** Codes used to be drawn mirrored (rows and columns swapped), which most phone scanners tolerate but the QR standard doesn't allow. They are now drawn the standard way, with a Rotation option to move the finder squares.
 - **Quiet zone.** Codes get the standard white border by default, so they scan on dark or busy backgrounds.
 - **Clear errors.** Invalid settings, text too long for the QR size, and oversized output now show a message instead of silently freezing the preview.
-- **Usability.** File picker for phones, faster updates (rendered shortly after the last change instead of every 500 ms), number fields, labelled controls, and a layout that fits narrow screens.
+- **Usability.** File picker for phones, faster updates (rendered shortly after the last change instead of every 500 ms), number fields, labeled controls, and a layout that fits narrow screens.
 - **Cleanup.** One copy of the app page instead of two that had drifted apart, removed the old generator version and Firebase placeholder pages, and removed unused code.
-- **Right-sized PNGs.** Downloads are saved in the smallest correct PNG format for their content: a 1-bit bitmap for opaque black and white, an indexed palette for few colours (black, white and transparent fits in 2 bits), greyscale for grey images, and full colour only when needed. With default settings this cuts the file from about 16 KB to about 2 KB. Black and white and Dithering now also make each pixel fully opaque or fully transparent, so their output really is two-tone. The format and size are shown under the code. Browsers without `CompressionStream` fall back to a standard full-colour PNG.
+- **Right-sized PNGs.** Downloads are saved in the smallest correct PNG format for their content: a 1-bit bitmap for opaque black and white, an indexed palette for few colors (black, white and transparent fit in 2 bits), grayscale for gray images, and full color only when needed. With default settings this cuts the file from about 16 KB to about 2 KB. The Black and white and Dithering effects now also make each pixel fully opaque or fully transparent, so their output really is two-tone. The format and size are shown under the code. Browsers without `CompressionStream` fall back to a standard full-color PNG.
 - **PNG metadata.** Downloaded PNGs include `Software` and `Comment` text fields linking back to this project.
 - **Adjustable dot size.** A Dot size slider sets how big the data dots are, trading scan reliability against how much of the image shows.
 - **Reset button.** One click puts every option back to its default, keeping your text and image.
-- **No jQuery.** The app uses plain browser APIs; the 247KB jQuery 2.1.1 file is gone.
+- **No jQuery.** The app uses plain browser APIs; the 247 KB jQuery 2.1.1 file is gone.
 
 ## Third-party code
 

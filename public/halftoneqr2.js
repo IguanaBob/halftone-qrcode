@@ -44,7 +44,7 @@ function readSettings() {
     }
     return value;
   }
-  // Slider value if its checkbox is ticked, otherwise null (effect off).
+  // Slider value if its checkbox is checked, otherwise null (effect off).
   function optional(checkbox, slider) {
     return byId(checkbox).checked ? parseFloat(byId(slider).value) : null;
   }
@@ -63,7 +63,7 @@ function readSettings() {
     background: byId("background").value,
     quietZone: byId("quiet-zone").checked,
     pixelation: optional("pixelate", "pixelation"),
-    greyscale: optional("should-greyscale", "greyscale"),
+    grayscale: optional("should-grayscale", "grayscale"),
     dither: optional("should-dither", "dither"),
     contrast: optional("blacknwhite", "contrast"),
     rotation: Number(byId("rotation").value), // degrees clockwise
@@ -139,7 +139,7 @@ function halftoneQR(imageCanvas, settings) {
   tempCanvas.getContext("2d").drawImage(imageCanvas, 0, 0, codeSize, codeSize);
 
   if (settings.pixelation !== null) pixelate(tempCanvas, settings.pixelation);
-  if (settings.greyscale !== null) greyscale(tempCanvas, settings.greyscale);
+  if (settings.grayscale !== null) grayscale(tempCanvas, settings.grayscale);
   if (settings.dither !== null) dither(tempCanvas, settings.dither, settings.pixelSize);
   if (settings.contrast !== null) contrast(tempCanvas, settings.contrast);
 
@@ -162,14 +162,14 @@ function halftoneQR(imageCanvas, settings) {
 function drawTransparent(canvas, QRBytes, controlBytes, settings) {
   var ctx = canvas.getContext("2d");
   var blockSize = settings.blockSize;
-  // Side of the data dot in pixels, and its offset to sit centred in the
+  // Side of the data dot in pixels, and its offset to sit centered in the
   // module. 33% at block size 3 is exactly the middle sub-cell.
   var dot = Math.max(1, Math.round((blockSize * settings.dotSize) / 100));
   var offset = Math.floor((blockSize - dot) / 2);
 
   // Matrices are [row][column]: rows go down (y), columns across (x).
 
-  // Data modules: only the centre dot carries the bit.
+  // Data modules: only the center dot carries the bit.
   for (var row = 0; row < QRBytes.length; row++) {
     for (var col = 0; col < QRBytes[row].length; col++) {
       ctx.fillStyle = QRBytes[row][col] ? "black" : "white";
@@ -237,29 +237,29 @@ function dither(canvas, threshold, cellSize) {
   var d = pixels.data;
 
   // Average luminance of each cell.
-  var grey = new Float32Array(cols * rows);
+  var gray = new Float32Array(cols * rows);
   var count = new Uint32Array(cols * rows);
   for (var y = 0; y < height; y++) {
     var rowBase = Math.floor(y / cellSize) * cols;
     for (var x = 0; x < width; x++) {
       var cellIndex = rowBase + Math.floor(x / cellSize);
-      grey[cellIndex] += luminance(d, (y * width + x) * 4);
+      gray[cellIndex] += luminance(d, (y * width + x) * 4);
       count[cellIndex]++;
     }
   }
-  for (var i = 0; i < grey.length; i++) grey[i] /= count[i];
+  for (var i = 0; i < gray.length; i++) gray[i] /= count[i];
 
   var spread = [[1, 0], [2, 0], [-1, 1], [0, 1], [1, 1], [0, 2]];
   for (var r = 0; r < rows; r++) {
     for (var c = 0; c < cols; c++) {
       var idx = r * cols + c;
-      var value = grey[idx] >= threshold ? 255 : 0;
-      var error = (grey[idx] - value) / 8;
-      grey[idx] = value;
+      var value = gray[idx] >= threshold ? 255 : 0;
+      var error = (gray[idx] - value) / 8;
+      gray[idx] = value;
       for (var s = 0; s < spread.length; s++) {
         var nc = c + spread[s][0];
         var nr = r + spread[s][1];
-        if (nc >= 0 && nc < cols && nr < rows) grey[nr * cols + nc] += error;
+        if (nc >= 0 && nc < cols && nr < rows) gray[nr * cols + nc] += error;
       }
     }
   }
@@ -270,7 +270,7 @@ function dither(canvas, threshold, cellSize) {
     var base = Math.floor(py / cellSize) * cols;
     for (var px = 0; px < width; px++) {
       var p = (py * width + px) * 4;
-      d[p] = d[p + 1] = d[p + 2] = grey[base + Math.floor(px / cellSize)];
+      d[p] = d[p + 1] = d[p + 2] = gray[base + Math.floor(px / cellSize)];
       d[p + 3] = d[p + 3] >= 128 ? 255 : 0;
     }
   }
@@ -311,17 +311,17 @@ function contrast(canvas, threshold) {
   ctx.putImageData(pixels, 0, 0);
 }
 
-// Blends each pixel toward its grey value; amount is 0-100.
-function greyscale(canvas, amount) {
+// Blends each pixel toward its gray value; amount is 0-100.
+function grayscale(canvas, amount) {
   var ctx = canvas.getContext("2d");
   var mix = amount / 100;
   var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
   var d = pixels.data;
   for (var i = 0; i < d.length; i += 4) {
-    var grey = luminance(d, i);
-    d[i] += (grey - d[i]) * mix;
-    d[i + 1] += (grey - d[i + 1]) * mix;
-    d[i + 2] += (grey - d[i + 2]) * mix;
+    var gray = luminance(d, i);
+    d[i] += (gray - d[i]) * mix;
+    d[i + 1] += (gray - d[i + 1]) * mix;
+    d[i + 2] += (gray - d[i + 2]) * mix;
   }
   ctx.putImageData(pixels, 0, 0);
 }
