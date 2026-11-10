@@ -82,6 +82,8 @@ The only dependency is included in this repository, so the app makes no network 
 
 Halftone QR codes come from the SIGGRAPH Asia 2013 paper *[Halftone QR Codes](http://vecg.cs.ucl.ac.uk/Projects/SmartGeometry/halftone_QR/halftoneQR_sigga13.html)* by Chu et al. Each QR module is split into a grid of sub-modules. Only the center sub-module has to match the QR data; the rest can follow the image.
 
+Further reading: [如何优雅地让人给你打钱](https://zhuanlan.zhihu.com/p/20728355) ("How to elegantly get people to pay you"), a Chinese article on Zhihu about making halftone QR codes ([archived copy](https://web.archive.org/web/20221224191612/https://zhuanlan.zhihu.com/p/20728355)).
+
 ## Credits
 
 - [Original version](https://jsfiddle.net/lachlan/r8qWV/) by [Lachlan Arthur](http://lach.la)
