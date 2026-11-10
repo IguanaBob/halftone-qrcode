@@ -83,6 +83,12 @@ input[type="number"] {
     margin-left: 6px;
 }
 
+/* Chromium and Safari hide the up/down buttons until hovered. */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+}
+
 #crop {
     width: 100%;
     max-width: 100%;

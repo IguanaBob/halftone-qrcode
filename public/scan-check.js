@@ -23,6 +23,46 @@ var SCAN_BLUR = 0.7;
 var SCAN_GRID_SHIFT = 0.1;
 // Half-width of the local threshold window, in modules.
 var SCAN_WINDOW = 3.5;
+// Give up after this many milliseconds, so slow devices stay responsive.
+var SCAN_TIME_LIMIT = 1000;
+
+// Thrown inside scanCheck when the time limit is reached.
+function ScanTimeout() {}
+
+// True if the browser returns canvas pixels exactly as drawn. Privacy
+// features in some browsers (Brave, Tor Browser, Firefox with
+// resistFingerprinting) add noise to or blank out pixel readback, which
+// makes the scan check and the PNG format choice unreliable.
+function canvasReadbackIsExact() {
+  try {
+    var canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 8;
+    var ctx = canvas.getContext("2d");
+    var colors = ["#000000", "#ffffff", "#ff0000", "#00ff00", "#0000ff", "#808080", "#123456", "#fedcba"];
+    colors.forEach(function (color, i) {
+      ctx.fillStyle = color;
+      ctx.fillRect(i, 0, 1, 8);
+    });
+    var d = ctx.getImageData(0, 0, 8, 8).data;
+    for (var y = 0; y < 8; y++) {
+      for (var x = 0; x < 8; x++) {
+        var hex = colors[x];
+        var p = (y * 8 + x) * 4;
+        if (
+          d[p] !== parseInt(hex.slice(1, 3), 16) ||
+          d[p + 1] !== parseInt(hex.slice(3, 5), 16) ||
+          d[p + 2] !== parseInt(hex.slice(5, 7), 16) ||
+          d[p + 3] !== 255
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 // For each module, the index of the codeword (byte) its bit belongs to, or
 // -1 for function patterns and leftover bits. Follows the standard zigzag
@@ -84,7 +124,7 @@ function codewordBlocks(blocks) {
 }
 
 // In-place separable Gaussian blur of a size x size luminance array.
-function gaussianBlur(lum, size, sigma) {
+function gaussianBlur(lum, size, sigma, checkTime) {
   var radius = Math.ceil(sigma * 3);
   var kernel = [];
   var sum = 0;
@@ -99,6 +139,7 @@ function gaussianBlur(lum, size, sigma) {
   var tmp = new Float32Array(lum.length);
   var pass = function (src, dst, dx, dy) {
     for (var y = 0; y < size; y++) {
+      checkTime();
       for (var x = 0; x < size; x++) {
         var acc = 0;
         for (var k = -radius; k <= radius; k++) {
@@ -144,8 +185,22 @@ function integralImage(lum, size) {
 //   blocks   Reed-Solomon blocks: [{ dataCount, totalCount }]
 //   margin   quiet zone width in modules (0 if off)
 // Returns { ok, worst, failed, blockCount }, where worst is the largest
-// share of any block's correction capacity used (1 = at the limit).
+// share of any block's correction capacity used (1 = at the limit), or
+// { timedOut: true } if the check took longer than SCAN_TIME_LIMIT.
 function scanCheck(canvas, code) {
+  var deadline = Date.now() + SCAN_TIME_LIMIT;
+  var checkTime = function () {
+    if (Date.now() > deadline) throw new ScanTimeout();
+  };
+  try {
+    return runScanCheck(canvas, code, checkTime);
+  } catch (e) {
+    if (e instanceof ScanTimeout) return { timedOut: true };
+    throw e;
+  }
+}
+
+function runScanCheck(canvas, code, checkTime) {
   var modules = code.matrix.length;
   var ppm = SCAN_PIXELS_PER_MODULE;
   var size = Math.round((modules + 2 * code.margin) * ppm);
@@ -164,7 +219,7 @@ function scanCheck(canvas, code) {
   for (var i = 0; i < lum.length; i++) {
     lum[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
   }
-  gaussianBlur(lum, size, SCAN_BLUR);
+  gaussianBlur(lum, size, SCAN_BLUR, checkTime);
 
   // 2. Local threshold.
   var mean = integralImage(lum, size);
@@ -186,6 +241,7 @@ function scanCheck(canvas, code) {
   var result = { ok: true, worst: 0, failed: 0, blockCount: code.blocks.length };
 
   shifts.forEach(function (shift) {
+    checkTime();
     // 3. Read every data module and note which codewords have a wrong bit.
     var wrong = new Uint8Array(owner.length);
     for (var r = 0; r < modules; r++) {

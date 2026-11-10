@@ -21,9 +21,10 @@
           through the code as a halftone pattern.
         </p>
         <p class="notice">
-          This tool runs entirely in your browser. Your images and text are
-          never uploaded. You are responsible for making sure you have the
-          rights to use any image you put in a QR code.
+          This tool runs entirely in your browser. Your QR codes are generated
+          locally, and your images and text are never uploaded to, seen by or
+          served from a remote server. You are responsible for making sure
+          you have the rights to use any image you put in a QR code.
         </p>
         <h2>
           Drop an image onto the page or choose a file. The QR code updates as
@@ -130,6 +131,15 @@
         </a>
         <p id="scan-check" class="scan-check" aria-live="polite"></p>
         <p class="hint">Click the QR code to download it as a PNG<span id="png-info"></span>.</p>
+        <p id="png-note" class="hint" hidden></p>
+        <p id="readback-note" class="hint notice" hidden>
+          This browser changes or blocks the canvas image data that pages read
+          back, usually as a privacy protection against fingerprinting (Brave,
+          Tor Browser and some Firefox settings do this). The simulated scan may be wrong, the PNG may be
+          larger than usual, and the image effects may not work properly.
+          Another browser, or turning the protection off for this page, gives
+          reliable results.
+        </p>
         <details class="hint scan-about">
           <summary>About the simulated scan</summary>
           <p>
@@ -142,8 +152,16 @@
           <p>
             It can't simulate lighting, glare, shadows, viewing angle, camera
             shake, distance, print or screen quality, or differences between
-            scanner apps. A code that passes is likely to work, but it's still
-            an estimate: always test with a real phone, ideally two.
+            scanner apps. Browsers also resize and blur images slightly
+            differently, so the same code can get a different result (for
+            example 7% in one browser and 14% in another). Treat it as a rough
+            guide and don't rely on it alone: always test with a real phone,
+            ideally two, especially once it's printed on the final product.
+          </p>
+          <p>
+            The simulation can be unreliable in browsers that alter canvas
+            image data for privacy, such as Brave or Tor Browser, and it is
+            skipped if it takes more than a second on a slow device.
           </p>
         </details>
       </div>

@@ -19,6 +19,28 @@ var downloadJob = 0;
 
 // Encodes the output canvas (see png-encoder.js) and points the download
 // link at it. Encoding is asynchronous; only the newest result is used.
+// Warns when the browser alters pixels read back from canvases (a privacy
+// feature in Brave, Tor Browser and some Firefox settings).
+function checkCanvasReadback() {
+  byId("readback-note").hidden = canvasReadbackIsExact();
+}
+
+// Explains when the smaller PNG formats couldn't be used.
+function showPngNote(fallback) {
+  var note = byId("png-note");
+  note.hidden = !fallback;
+  if (fallback === "unsupported") {
+    note.textContent =
+      "This browser can't compress PNG files itself, so the download is a " +
+      "standard full-color PNG. It looks the same, but the file is larger. " +
+      "An up-to-date browser gives a smaller file.";
+  } else if (fallback === "failed") {
+    note.textContent =
+      "Couldn't make the smaller PNG file, so the download is a standard " +
+      "full-color PNG. It looks the same, but the file is larger.";
+  }
+}
+
 function updateDownload(canvas) {
   var job = ++downloadJob;
   encodePng(canvas, PNG_METADATA).then(function (result) {
@@ -28,6 +50,7 @@ function updateDownload(canvas) {
     byId("download").href = downloadUrl;
     var kb = (result.blob.size / 1024).toFixed(1);
     byId("png-info").textContent = " (" + result.format + ", " + kb + " KB)";
+    showPngNote(result.fallback);
   });
 }
 
@@ -384,10 +407,16 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       var code = halftoneQR(canvas, readSettings());
       showError("");
-      showScanCheck(scanCheck(byId("output"), code));
     } catch (e) {
       showError(e && e.message ? e.message : String(e));
       showScanCheck(null);
+      return;
+    }
+    // The code is drawn; a problem with the check must not hide it.
+    try {
+      showScanCheck(scanCheck(byId("output"), code));
+    } catch (e) {
+      showScanCheck({ failedToRun: true });
     }
   }
 
@@ -396,6 +425,16 @@ document.addEventListener("DOMContentLoaded", function () {
     el.className = "scan-check";
     if (!result) {
       el.textContent = "";
+      return;
+    }
+    if (result.timedOut) {
+      el.textContent =
+        "Simulated scan skipped: it took too long on this device. A " +
+        "smaller QR size checks faster.";
+      return;
+    }
+    if (result.failedToRun) {
+      el.textContent = "Simulated scan couldn't run in this browser.";
       return;
     }
     var used = Math.round(Math.min(result.worst, 9.99) * 100);
@@ -573,5 +612,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Browsers may restore an emptied text box on refresh.
   restoreBlankText();
   fitSize(); // in case the starting text needs a bigger code
+  checkCanvasReadback();
   loadImage(SAMPLE_IMAGE_URL);
 });

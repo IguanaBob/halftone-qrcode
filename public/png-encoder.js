@@ -232,7 +232,7 @@ function zlibCompress(bytes) {
 }
 
 // The browser's own PNG export with metadata inserted after IHDR.
-function browserPng(canvas, metadata) {
+function browserPng(canvas, metadata, fallback) {
   var binary = atob(canvas.toDataURL("image/png").split(",")[1]);
   var png = new Uint8Array(binary.length);
   for (var i = 0; i < binary.length; i++) png[i] = binary.charCodeAt(i);
@@ -243,14 +243,17 @@ function browserPng(canvas, metadata) {
   return {
     blob: new Blob(parts, { type: "image/png" }),
     format: "32-bit color with transparency",
+    fallback: fallback,
   };
 }
 
 // Encodes a canvas as a PNG Blob with tEXt metadata. Resolves to
-// { blob, format } where format describes the chosen PNG type.
+// { blob, format, fallback } where format describes the chosen PNG type.
+// fallback is set when the browser's own export had to be used instead:
+// "unsupported" (no CompressionStream) or "failed" (compression errored).
 function encodePng(canvas, metadata) {
   if (typeof CompressionStream === "undefined") {
-    return Promise.resolve(browserPng(canvas, metadata));
+    return Promise.resolve(browserPng(canvas, metadata, "unsupported"));
   }
 
   var width = canvas.width;
@@ -284,7 +287,12 @@ function encodePng(canvas, metadata) {
     }
   }
 
-  return zlibCompress(filterImage(data, width, height, format))
+  // Start inside a promise, so an error thrown straight away also falls
+  // back to the browser's export below.
+  return Promise.resolve()
+    .then(function () {
+      return zlibCompress(filterImage(data, width, height, format));
+    })
     .then(function (compressed) {
       chunks.push(pngChunk("IDAT", compressed));
       chunks.push(pngChunk("IEND", new Uint8Array(0)));
@@ -294,6 +302,6 @@ function encodePng(canvas, metadata) {
       };
     })
     .catch(function () {
-      return browserPng(canvas, metadata);
+      return browserPng(canvas, metadata, "failed");
     });
 }
